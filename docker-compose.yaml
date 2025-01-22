@@ -15,6 +15,7 @@ services:
     networks:
       default:
         ipv4_address: ${DNS_IP}
+
   rtpengine:
     build: ./rtpengine
     image: docker_rtpengine
@@ -40,11 +41,12 @@ services:
     expose:
       - "2223/udp"
       - "49000-50000/udp"
-    # ports:
-    #   - "49000-50000:49000-50000/udp"
     networks:
       default:
         ipv4_address: ${RTPENGINE_IP}
+    depends_on:
+      - dns
+
   mysql:
     build: ./mysql
     image: docker_mysql
@@ -60,6 +62,9 @@ services:
     networks:
       default:
         ipv4_address: ${MYSQL_IP}
+    depends_on:
+      - dns
+
   fhoss:
     build: ./fhoss
     image: docker_fhoss
@@ -86,6 +91,7 @@ services:
     networks:
       default:
         ipv4_address: ${FHOSS_IP}
+
   icscf:
     image: kamailio
     container_name: icscf
@@ -112,6 +118,7 @@ services:
     networks:
       default:
         ipv4_address: ${ICSCF_IP}
+
   scscf:
     image: kamailio
     container_name: scscf
@@ -136,6 +143,7 @@ services:
     networks:
       default:
         ipv4_address: ${SCSCF_IP}
+
   pcscf:
     image: kamailio
     container_name: pcscf
@@ -166,22 +174,14 @@ services:
       - "5100-5120/udp"
       - "6100-6120/tcp"
       - "6100-6120/udp"
-    # ports:
-    #   - "3871:3871/udp"
-    #   - "3871:3871/tcp"
-    #   - "5060:5060/tcp"
-    #   - "5060:5060/udp"
-    #   - "5100-5120:5100-5120/tcp"
-    #   - "5100-5120:5100-5120/udp"
-    #   - "6100-6120:6100-6120/tcp"
-    #   - "6100-6120:6100-6120/udp"
     networks:
       default:
         ipv4_address: ${PCSCF_IP}
-  presence_server:
+
+  opensips:
     build: ./opensips
     image: opensips
-    container_name: presence_server
+    container_name: opensips
     dns: ${DNS_IP}
     env_file:
       - .env
@@ -193,7 +193,7 @@ services:
       - scscf
       - pcscf
     volumes:
-      - ./ presence_server:/mnt/ presence_server
+      - ./opensips:/mnt/opensips
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     expose:
@@ -201,9 +201,12 @@ services:
     networks:
       default:
         ipv4_address: ${PRESENCE_IP}
+
 networks:
   default:
     external:
       name: dockervlan
+
 volumes:
   dbdata: {}
+
