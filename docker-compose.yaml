@@ -13,7 +13,7 @@ services:
     expose:
       - "53/udp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${DNS_IP}
 
   rtpengine:
@@ -41,11 +41,15 @@ services:
     expose:
       - "2223/udp"
       - "49000-50000/udp"
+    ports:
+      - "2223:2223/udp"
+      - "49000-50000:49000-50000/udp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${RTPENGINE_IP}
     depends_on:
-      - dns
+      dns:
+        condition: service_started
 
   mysql:
     build: ./mysql
@@ -60,10 +64,11 @@ services:
     expose:
       - "3306/tcp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${MYSQL_IP}
     depends_on:
-      - dns
+      dns:
+        condition: service_started
 
   fhoss:
     build: ./fhoss
@@ -77,8 +82,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - dns
-      - mysql
+      dns:
+        condition: service_started
+      mysql:
+        condition: service_started
     expose:
       - "3868/udp"
       - "3868/tcp"
@@ -89,7 +96,7 @@ services:
     ports:
       - "8080:8080/tcp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${FHOSS_IP}
 
   icscf:
@@ -105,9 +112,12 @@ services:
     environment:
       - COMPONENT_NAME=icscf-1
     depends_on:
-      - dns
-      - mysql
-      - fhoss
+      dns:
+        condition: service_started
+      mysql:
+        condition: service_started
+      fhoss:
+        condition: service_started
     expose:
       - "3868/udp"
       - "3868/tcp"
@@ -116,7 +126,7 @@ services:
       - "4060/udp"
       - "4060/tcp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${ICSCF_IP}
 
   scscf:
@@ -132,16 +142,19 @@ services:
     environment:
       - COMPONENT_NAME=scscf-1
     depends_on:
-      - dns
-      - mysql
-      - fhoss
+      dns:
+        condition: service_started
+      mysql:
+        condition: service_started
+      fhoss:
+        condition: service_started
     expose:
       - "3870/udp"
       - "3870/tcp"
       - "6060/udp"
       - "6060/tcp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${SCSCF_IP}
 
   pcscf:
@@ -160,11 +173,18 @@ services:
     environment:
       - COMPONENT_NAME=pcscf-1
     depends_on:
-      - dns
-      - mysql
-      - rtpengine
-      - icscf
-      - scscf
+      dns:
+        condition: service_started
+      mysql:
+        condition: service_started
+      fhoss:
+        condition: service_started
+      rtpengine:
+        condition: service_started
+      icscf:
+        condition: service_started
+      scscf:
+        condition: service_started
     expose:
       - "3871/udp"
       - "3871/tcp"
@@ -174,8 +194,17 @@ services:
       - "5100-5120/udp"
       - "6100-6120/tcp"
       - "6100-6120/udp"
+    ports:
+    #   - "3871:3871/udp"
+    #   - "3871:3871/tcp"
+    #   - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5100-5120:5100-5120/tcp"
+    #   - "5100-5120:5100-5120/udp"
+    #   - "6100-6120:6100-6120/tcp"
+    #   - "6100-6120:6100-6120/udp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${PCSCF_IP}
 
   opensips:
@@ -186,12 +215,18 @@ services:
     env_file:
       - .env
     depends_on:
-      - dns
-      - mysql
-      - rtpengine
-      - icscf
-      - scscf
-      - pcscf
+      dns:
+        condition: service_started
+      mysql:
+        condition: service_started
+      fhoss:
+        condition: service_started
+      rtpengine:
+        condition: service_started
+      icscf:
+        condition: service_started
+      scscf:
+        condition: service_started
     volumes:
       - ./opensips:/mnt/opensips
       - /etc/timezone:/etc/timezone:ro
@@ -199,14 +234,14 @@ services:
     expose:
       - "5065/udp"
     networks:
-      default:
+      imsnet:
         ipv4_address: ${PRESENCE_IP}
-
-networks:
-  default:
-    external:
-      name: dockervlan
 
 volumes:
   dbdata: {}
 
+networks:
+  imsnet:
+    ipam:
+      config:
+        - subnet: ${TEST_NETWORK}
