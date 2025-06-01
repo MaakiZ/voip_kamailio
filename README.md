@@ -5,7 +5,9 @@ Docker files to build and run kamailio IMS in a docker
 
 Docker host machine
 
-- Ubuntu 18.04 and 20.04
+- Ubuntu 22.04
+- Docker version 28.2.2
+- Docker Compose version v2.27.0
 
 ## Build and Execution Instructions
 
@@ -19,19 +21,16 @@ Docker host machine
 Clone repository and build base docker image of open5gs, kamailio, ueransim
 
 ```
-git clone https://github.com/MauricioV/docker_ims
-cd docker_ims/ims_base
-docker build --no-cache --force-rm -t docker_kamailio .
+git clone git@github.com:MaakiZ/voip_kamailio.git
+cd voip_kamailio/kamailio_ims
+docker build --no-cache --force-rm -t kamailio .
 ```
 
-### Build and Run using docker-compose
+### Do edit .env, build and run using docker compose
 
 ```
-cd ..
-set -a
-source .env
-docker-compose build --no-cache
-docker-compose up
+docker compose build --no-cache
+docker compose up
 ```
 
 ## Register a UE information in the FoHSS
